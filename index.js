@@ -3,10 +3,10 @@ const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
     cors: {origin : '*'}
 });
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 
 http.listen(port, () =>
-    console.log(`listening on port : ${port}`)
+    console.log(`listening on http://localhost:${port}`)
 );
 // DATABASE :
 const path = require('path');
@@ -281,8 +281,7 @@ function removePlayer(players, index) {
   players.splice(index, 1);
 }
 function createOrGetRoom(socket, rooms, players, chronoRoom, gameInfo, robotConversation) {
-  const room = rooms.filter(room => room.chrono > 0 && getTeam(players, room.id).length < 4 && !room.startGame)[0];
-  let roomId = room ? room.id : null;
+  let roomId = rooms.find(room => room.chrono > 0 && getTeam(players, room.id).length < 4 && !room.startGame)?.id;
   let minusChrono = false;
   if(!roomId) {
     minusChrono = true;
@@ -323,12 +322,12 @@ function createOrGetRoom(socket, rooms, players, chronoRoom, gameInfo, robotConv
 function intervalChrono(socket, rooms, players, roomId, minusChrono) {
   const idInterval = setInterval(() => {
     const roomIndex = getRoomIndex(rooms, roomId);
-    if (rooms[roomIndex].chrono >= 0) {
+    if (rooms[roomIndex]?.chrono >= 0) {
       if(minusChrono) rooms[roomIndex].chrono--;
       const chrono = rooms[roomIndex].chrono > 0 ? rooms[roomIndex].chrono : 0;
       socket.emit('getChronoRoom', chrono);
       const team = getTeam(players, roomId);
-      if(chrono === 0 && !team[1] && socket.id === team[0].id) {
+      if(chrono === 0 && !team[1] && socket.id === team[0]?.id) {
         back(socket, players, rooms, roomIndex);
       };
     } else clearInterval(idInterval);
@@ -357,7 +356,7 @@ function newId() {
 function intervalRoom(rooms, roomId, team) {
   const idIntervalChrono = setInterval(() => {
     const roomIndex = getRoomIndex(rooms, roomId);
-    if (rooms[roomIndex].game.chrono > 0 && rooms[roomIndex].game.ended !== true) {
+    if (rooms[roomIndex]?.game.chrono > 0 && rooms[roomIndex]?.game.ended !== true) {
       rooms[roomIndex].game.chrono--;
       io.emit('updateRoomChrono', rooms[roomIndex].game.chrono, team);
     } else clearInterval(idIntervalChrono);
@@ -374,8 +373,7 @@ function talkToRobot(note, rooms, roomId, players, robotConversation) {
   if(str.match(regexp)) {
     regexp = /[0-9]{1,}/g;
     const messages = [];
-    const match = str.match(regexp) ? str.match(regexp) : [];
-    match.forEach(num => {
+    str.match(regexp)?.forEach(num => {
       const message = robotConversation[num] && rooms[roomIndex].game.clues.filter(clue => clue.id == num)[0] ? robotConversation[num] : robotConversation["D"]+num;
       if(!messages.includes(message)) messages.push(message);
     });
