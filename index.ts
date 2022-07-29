@@ -372,10 +372,10 @@ function talkToRobot(note, rooms, roomId, players, robotConversation) {
   let regexp = /indice/;
   if(str.match(regexp)) {
     regexp = /[0-9]{1,}/g;
-    const messages = [];
+    const messages: string[] = [];
     str.match(regexp)?.forEach(num => {
       const message = robotConversation[num] && rooms[roomIndex].game.clues.filter(clue => clue.id == num)[0] ? robotConversation[num] : robotConversation["D"]+num;
-      if(!messages.includes(message)) messages.push(message);
+      if(!messages.filter(m => m === message)[0]) messages.push(message);
     });
     const idInterval = setInterval(() => {
       if (messages[0]) {
